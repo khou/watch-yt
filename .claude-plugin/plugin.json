@@ -1,0 +1,7 @@
+{
+  "name": "claude-watch-yt",
+  "version": "0.1.0",
+  "description": "Watch and analyze videos using only Claude — captions via yt-dlp, frames via ffmpeg, no Whisper or third-party transcription service.",
+  "author": "kevin",
+  "skills": ["./SKILL.md"]
+}
