@@ -33,13 +33,20 @@ Captions add a few hundred to a few thousand text tokens on top.
 
 ## Install
 
-```bash
-git clone <this-repo>
-cd claude-watch-yt
-bash install.sh           # adds ~/.gemini/extensions/watch too: bash install.sh --gemini
-```
+Easiest path — just ask your AI agent to do it:
 
-That's it. `install.sh` symlinks the repo into `~/.claude/skills/watch`, which is auto-discovered by **Claude Code** (native skill location) and **Cursor** (it reads `~/.claude/skills/` for legacy compatibility). For **Gemini CLI**, pass `--gemini` and also append `prompts/gemini.md` into your `~/.gemini/GEMINI.md`.
+1. Clone or download this repo (or ask your agent to: *"clone https://github.com/.../claude-watch-yt"*).
+2. Open the repo folder in **Claude Code**, **Cursor**, or **Gemini CLI**.
+3. Say: *"set this up"* or *"install this skill"*.
+
+The agent reads [AGENTS.md](AGENTS.md), creates the right symlink (`~/.claude/skills/watch`, which both Claude Code and Cursor auto-discover), and confirms when done.
+
+If you'd rather run the script yourself:
+
+```bash
+bash install.sh                # Claude Code + Cursor
+bash install.sh --gemini       # ...also Gemini CLI
+```
 
 `ffmpeg` and `yt-dlp` install themselves the first time the script runs (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
 
@@ -113,11 +120,11 @@ watch.py SOURCE [--mode {fast,balanced,accurate}]
 ## Repo layout
 
 ```
+AGENTS.md                     Tells the agent how to install this skill
+SKILL.md                      Skill (loaded after install)
 .claude-plugin/plugin.json    Claude Code plugin manifest
-SKILL.md                      Claude Code skill definition
-prompts/
-  gemini.md                   Snippet to append to your Gemini GEMINI.md
-install.sh                    Symlinks repo into the standard skill dirs
+prompts/gemini.md             Snippet to append to your ~/.gemini/GEMINI.md
+install.sh                    Manual install (symlinks repo into skill dirs)
 scripts/
   watch.py                    Orchestrator (CLI entry point)
   download.py                 yt-dlp wrapper, captions best-effort
