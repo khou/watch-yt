@@ -21,10 +21,10 @@ Do NOT trigger for non-video URLs, image-only files, or audio files.
 
 ## How to run
 
-The script lives at `${CLAUDE_PLUGIN_ROOT}/scripts/watch.py`.
+The script lives at `scripts/watch.py` inside this skill's directory. Resolve it to an absolute path (the directory containing this `SKILL.md`) before invoking. After running `install.sh`, the canonical path is `~/.claude/skills/watch/scripts/watch.py`.
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/watch.py" "<source>" [options]
+python3 <skill-dir>/scripts/watch.py "<source>" [options]
 ```
 
 Options (all optional):

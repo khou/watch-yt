@@ -33,44 +33,17 @@ Captions add a few hundred to a few thousand text tokens on top.
 
 ## Install
 
-The pipeline (Python + ffmpeg + yt-dlp) is model-agnostic — drop-in instructions for the major local agentic tools:
+```bash
+git clone <this-repo>
+cd claude-watch-yt
+bash install.sh           # adds ~/.gemini/extensions/watch too: bash install.sh --gemini
+```
 
-| Tool             | Install path                       |
-|------------------|------------------------------------|
-| **Claude Code**  | `~/.claude/skills/watch/`          |
-| **Cursor**       | `.cursor/rules/watch.mdc`          |
-| **Gemini CLI**   | `~/.gemini/extensions/watch/`      |
+That's it. `install.sh` symlinks the repo into `~/.claude/skills/watch`, which is auto-discovered by **Claude Code** (native skill location) and **Cursor** (it reads `~/.claude/skills/` for legacy compatibility). For **Gemini CLI**, pass `--gemini` and also append `prompts/gemini.md` into your `~/.gemini/GEMINI.md`.
 
-Each one runs the script directly when you ask about a video. `ffmpeg` and `yt-dlp` install automatically on first run (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
+`ffmpeg` and `yt-dlp` install themselves the first time the script runs (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
 
 > macOS: install Homebrew first from https://brew.sh if you don't have it.
-
-### Claude Code
-
-```bash
-ln -s "$(pwd)" ~/.claude/skills/watch
-# or: git clone <this-repo> ~/.claude/skills/watch
-```
-
-Then in any session: *"Summarize https://youtu.be/&lt;id&gt;"*
-
-### Cursor
-
-```bash
-git clone <this-repo> ~/.claude/skills/watch    # any path is fine
-mkdir -p .cursor/rules
-cp ~/.claude/skills/watch/prompts/cursor.mdc .cursor/rules/watch.mdc
-```
-
-(Or copy the rule into a global rules folder if your Cursor version supports it.) Cursor's agent picks up the rule, runs the script, and answers. Edit the path inside `cursor.mdc` if you didn't install at `~/.claude/skills/watch`.
-
-### Gemini CLI
-
-```bash
-git clone <this-repo> ~/.gemini/extensions/watch
-```
-
-Add the contents of `prompts/gemini.md` to your `~/.gemini/GEMINI.md`, or include the file in your project context. Then ask Gemini about a video URL.
 
 ## Use it
 
@@ -143,8 +116,8 @@ watch.py SOURCE [--mode {fast,balanced,accurate}]
 .claude-plugin/plugin.json    Claude Code plugin manifest
 SKILL.md                      Claude Code skill definition
 prompts/
-  cursor.mdc                  Cursor rule
-  gemini.md                   Gemini CLI instructions
+  gemini.md                   Snippet to append to your Gemini GEMINI.md
+install.sh                    Symlinks repo into the standard skill dirs
 scripts/
   watch.py                    Orchestrator (CLI entry point)
   download.py                 yt-dlp wrapper, captions best-effort
