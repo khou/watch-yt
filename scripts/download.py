@@ -73,7 +73,9 @@ def download(source: str, work_dir: Path) -> VideoInfo:
         )
 
     if not shutil.which("yt-dlp"):
-        raise RuntimeError("yt-dlp not installed. Run setup.sh.")
+        raise RuntimeError(
+            "yt-dlp not installed. Re-run without --no-install, or run setup.sh manually."
+        )
 
     # Cap height at 720p — frames get downscaled anyway, no need to pull 4K.
     out_template = str(work_dir / "video.%(ext)s")

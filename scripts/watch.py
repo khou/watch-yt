@@ -20,6 +20,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -31,6 +33,44 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from captions import load_transcript  # noqa: E402
 from download import download  # noqa: E402
 from frames import auto_fps, extract  # noqa: E402
+
+
+REQUIRED_TOOLS = ("ffmpeg", "ffprobe", "yt-dlp")
+
+
+def ensure_deps(skip: bool = False) -> None:
+    """Make sure ffmpeg and yt-dlp are installed; install via setup.sh if not."""
+    if skip:
+        return
+    missing = [t for t in REQUIRED_TOOLS if not shutil.which(t)]
+    if not missing:
+        return
+
+    setup = Path(__file__).resolve().parent.parent / "setup.sh"
+    if not setup.is_file():
+        raise SystemExit(
+            f"Missing tools: {', '.join(missing)}. setup.sh not found at {setup}; "
+            "install ffmpeg and yt-dlp manually."
+        )
+
+    print(
+        f"Missing {', '.join(missing)} — running {setup} (one-time setup)...",
+        file=sys.stderr,
+    )
+    try:
+        subprocess.run(["bash", str(setup)], check=True)
+    except subprocess.CalledProcessError as e:
+        raise SystemExit(
+            f"setup.sh failed (exit {e.returncode}). "
+            f"Install manually: {' '.join(missing)}"
+        )
+
+    still_missing = [t for t in REQUIRED_TOOLS if not shutil.which(t)]
+    if still_missing:
+        raise SystemExit(
+            f"Still missing after setup: {', '.join(still_missing)}. "
+            "Try running setup.sh manually to see the error."
+        )
 
 
 _TIME = re.compile(r"^(?:(\d+):)?(\d+):(\d+)$|^(\d+(?:\.\d+)?)$")
@@ -88,7 +128,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--end",   type=parse_time, default=None, help="End time.")
     parser.add_argument("--out-dir", default=None, help="Working directory (default: a temp dir).")
     parser.add_argument("--keep", action="store_true", help="Don't print the cleanup hint.")
+    parser.add_argument("--no-install", action="store_true",
+                        help="Don't auto-install ffmpeg/yt-dlp if missing.")
     args = parser.parse_args(argv)
+
+    ensure_deps(skip=args.no_install)
 
     work_dir = Path(args.out_dir).resolve() if args.out_dir else Path(tempfile.mkdtemp(prefix="watch_"))
     work_dir.mkdir(parents=True, exist_ok=True)

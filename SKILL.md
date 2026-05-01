@@ -92,10 +92,6 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/watch.py" /Users/me/clip.mp4 --start <dur
 
 ## Setup
 
-If the script fails with "ffmpeg not installed" or "yt-dlp not installed", run:
+`watch.py` auto-installs `ffmpeg` and `yt-dlp` on first run via the bundled `setup.sh` (Homebrew on macOS, apt/dnf/pacman on Linux). You don't need to run anything manually.
 
-```bash
-bash "${CLAUDE_PLUGIN_ROOT}/setup.sh"
-```
-
-This installs the two CLI tools via Homebrew (macOS) or the system package manager (Linux). They are local, free, and pull no data after install.
+If auto-install fails (e.g., Homebrew missing on macOS), the script prints the actual error — relay it to the user and tell them to install Homebrew from https://brew.sh, then try again. Don't try to bypass with `--no-install` unless the user asks.

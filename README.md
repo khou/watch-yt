@@ -31,21 +31,11 @@ Pick the trade-off you want:
 
 Captions add a few hundred to a few thousand text tokens on top.
 
-## Setup
+## Install
 
-One-time install of the two CLI tools:
+One-time install of the skill itself. Pick one:
 
-```bash
-bash setup.sh
-```
-
-This installs `ffmpeg` and `yt-dlp` via Homebrew (macOS) or apt/dnf/pacman (Linux). Both are open-source local tools — no API keys, no paid services.
-
-## Use it from Claude Code (recommended)
-
-Install the skill so Claude Code auto-loads it. Pick one:
-
-**Option A — symlink as a user skill (simplest):**
+**Option A — symlink (simplest, lets you `git pull` updates):**
 ```bash
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)" ~/.claude/skills/watch
@@ -54,10 +44,15 @@ ln -s "$(pwd)" ~/.claude/skills/watch
 **Option B — clone into the user skills dir:**
 ```bash
 git clone <this-repo> ~/.claude/skills/watch
-bash ~/.claude/skills/watch/setup.sh
 ```
 
-Then in any Claude Code session, just paste a video URL and ask:
+That's it. `ffmpeg` and `yt-dlp` are installed automatically the first time the skill runs (via the bundled `setup.sh`, using Homebrew on macOS or apt/dnf/pacman on Linux). No API keys. No third-party services.
+
+> If you don't have Homebrew on macOS, install it first from https://brew.sh — Claude will tell you if it's missing.
+
+## Use it
+
+In any Claude Code session, just paste a video URL and ask:
 
 ```
 Summarize https://www.youtube.com/watch?v=jNQXAC9IVRw
@@ -109,7 +104,7 @@ python3 scripts/watch.py ~/Movies/clip.mp4 --keep --out-dir /tmp/clip
 watch.py SOURCE [--mode {fast,balanced,accurate}]
                 [--max-frames N] [--resolution PX]
                 [--start TIME] [--end TIME]
-                [--out-dir DIR] [--keep]
+                [--out-dir DIR] [--keep] [--no-install]
 ```
 
 - `SOURCE` — URL (any yt-dlp-supported site) or local file path.
@@ -118,6 +113,7 @@ watch.py SOURCE [--mode {fast,balanced,accurate}]
 - `--start` / `--end` — accept `SS`, `MM:SS`, or `HH:MM:SS`.
 - `--out-dir` — working directory; defaults to a fresh tempdir.
 - `--keep` — suppress the cleanup hint.
+- `--no-install` — skip the auto-install of ffmpeg/yt-dlp.
 
 ## Repo layout
 
