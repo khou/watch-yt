@@ -1,6 +1,6 @@
 # claude-watch-yt
 
-Watch and analyze videos using **only your Claude subscription** — no Whisper API, no OpenAI, no Groq, no third-party transcription service.
+Watch and analyze videos using **only your existing AI subscription** — no Whisper API, no OpenAI, no Groq, no third-party transcription service. Works with Claude Code, Cursor, and Gemini CLI out of the box.
 
 Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video), but stripped of Whisper. Captions come straight from YouTube (or whatever yt-dlp can scrape). Videos without captions fall back to vision-only analysis.
 
@@ -9,13 +9,13 @@ Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude
 ```
 URL/file → yt-dlp → video.mp4 + auto-captions.vtt → ffmpeg → frames/*.jpg
                                                      ↓
-                                         Claude reads selectively
+                                       Your agent reads selectively
 ```
 
 1. `yt-dlp` pulls the video (max 720p) and YouTube's auto-generated captions.
 2. `ffmpeg` extracts frames at an adaptive FPS, downscaled to keep image-token cost low.
 3. The orchestrator prints a markdown summary: metadata, transcript, frame index.
-4. Claude reads the transcript and **only the frames it actually needs** to answer.
+4. Your agent reads the transcript and **only the frames it actually needs** to answer.
 
 When captions aren't available (TikTok, some Vimeo, some YouTube), the script switches to a denser frame sampling and Claude infers content from visuals alone.
 
@@ -33,43 +33,65 @@ Captions add a few hundred to a few thousand text tokens on top.
 
 ## Install
 
-One-time install of the skill itself. Pick one:
+The pipeline (Python + ffmpeg + yt-dlp) is model-agnostic — drop-in instructions for the major local agentic tools:
 
-**Option A — symlink (simplest, lets you `git pull` updates):**
+| Tool             | Install path                       |
+|------------------|------------------------------------|
+| **Claude Code**  | `~/.claude/skills/watch/`          |
+| **Cursor**       | `.cursor/rules/watch.mdc`          |
+| **Gemini CLI**   | `~/.gemini/extensions/watch/`      |
+
+Each one runs the script directly when you ask about a video. `ffmpeg` and `yt-dlp` install automatically on first run (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
+
+> macOS: install Homebrew first from https://brew.sh if you don't have it.
+
+### Claude Code
+
 ```bash
-mkdir -p ~/.claude/skills
 ln -s "$(pwd)" ~/.claude/skills/watch
+# or: git clone <this-repo> ~/.claude/skills/watch
 ```
 
-**Option B — clone into the user skills dir:**
+Then in any session: *"Summarize https://youtu.be/&lt;id&gt;"*
+
+### Cursor
+
 ```bash
-git clone <this-repo> ~/.claude/skills/watch
+git clone <this-repo> ~/.claude/skills/watch    # any path is fine
+mkdir -p .cursor/rules
+cp ~/.claude/skills/watch/prompts/cursor.mdc .cursor/rules/watch.mdc
 ```
 
-That's it. `ffmpeg` and `yt-dlp` are installed automatically the first time the skill runs (via the bundled `setup.sh`, using Homebrew on macOS or apt/dnf/pacman on Linux). No API keys. No third-party services.
+(Or copy the rule into a global rules folder if your Cursor version supports it.) Cursor's agent picks up the rule, runs the script, and answers. Edit the path inside `cursor.mdc` if you didn't install at `~/.claude/skills/watch`.
 
-> If you don't have Homebrew on macOS, install it first from https://brew.sh — Claude will tell you if it's missing.
+### Gemini CLI
+
+```bash
+git clone <this-repo> ~/.gemini/extensions/watch
+```
+
+Add the contents of `prompts/gemini.md` to your `~/.gemini/GEMINI.md`, or include the file in your project context. Then ask Gemini about a video URL.
 
 ## Use it
 
-In any Claude Code session, just paste a video URL and ask:
+Once installed, just ask the agent about a video URL:
 
 ```
 Summarize https://www.youtube.com/watch?v=jNQXAC9IVRw
 
-What does the speaker mention about elephants in https://youtu.be/jNQXAC9IVRw ?
+What does the speaker say about elephants in https://youtu.be/jNQXAC9IVRw ?
 
 What's on the slide at 4:30 in https://youtu.be/<id> ?
 ```
 
-Claude will detect the URL, run the prep script, read the transcript, and load only the frames it needs. To force a specific token budget:
+To force a token budget:
 
 ```
-Watch this video in fast mode: https://...
-Watch this video in accurate mode: https://...
+Watch this in fast mode: https://...
+Watch this in accurate mode: https://...
 ```
 
-## Use the script directly (no Claude Code)
+## Use the script directly
 
 ```bash
 python3 scripts/watch.py "https://youtu.be/jNQXAC9IVRw"
@@ -118,14 +140,17 @@ watch.py SOURCE [--mode {fast,balanced,accurate}]
 ## Repo layout
 
 ```
-.claude-plugin/plugin.json    Plugin manifest (Claude Code)
-SKILL.md                      Skill definition — how Claude uses this
+.claude-plugin/plugin.json    Claude Code plugin manifest
+SKILL.md                      Claude Code skill definition
+prompts/
+  cursor.mdc                  Cursor rule
+  gemini.md                   Gemini CLI instructions
 scripts/
   watch.py                    Orchestrator (CLI entry point)
   download.py                 yt-dlp wrapper, captions best-effort
   frames.py                   ffmpeg frame extraction
   captions.py                 WebVTT parser with rolling-cue dedup
-setup.sh                      Install ffmpeg + yt-dlp
+setup.sh                      Auto-installs ffmpeg + yt-dlp on first run
 ```
 
 ## Caveats
