@@ -1,0 +1,14 @@
+{
+  "name": "watch-yt",
+  "owner": {
+    "name": "kevin",
+    "url": "https://github.com/khou"
+  },
+  "plugins": [
+    {
+      "name": "claude-watch-yt",
+      "source": "./",
+      "description": "Watch and analyze videos using only Claude — captions via yt-dlp, frames via ffmpeg."
+    }
+  ]
+}

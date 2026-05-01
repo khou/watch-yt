@@ -15,6 +15,25 @@ If the user has just opened this repo and says anything like "set this up", "ins
 
 There's a `bash install.sh` that does the same thing — feel free to run it instead of doing the steps manually.
 
+## Installing without an existing clone (Cursor, Gemini CLI, others)
+
+If the user is talking to you in **Cursor**, **Gemini CLI**, or any agent that isn't Claude Code, and they don't already have the repo on disk, run this one-liner — it works from any cwd, no `git` required:
+
+```bash
+mkdir -p ~/.local/share && \
+  curl -fsSL https://github.com/khou/watch-yt/archive/refs/heads/main.tar.gz | \
+  tar xz -C ~/.local/share && \
+  rm -rf ~/.local/share/watch-yt && \
+  mv ~/.local/share/watch-yt-main ~/.local/share/watch-yt && \
+  bash ~/.local/share/watch-yt/install.sh
+```
+
+For Gemini CLI, append `--gemini` to the final `install.sh` call and tell the user to add the contents of `~/.local/share/watch-yt/prompts/gemini.md` to their `~/.gemini/GEMINI.md`.
+
+To update later, re-run the same one-liner — it overwrites `~/.local/share/watch-yt` in place; the symlinks keep pointing at it.
+
+> **Claude Code users:** prefer `/plugin marketplace add khou/watch-yt` then `/plugin install claude-watch-yt@watch-yt`. That's the native path and handles updates automatically. Only fall back to the one-liner above if the user explicitly doesn't want to use the plugin marketplace.
+
 ## After install
 
 Once installed, when the user shares a video URL or local file and asks a question, follow the instructions in `SKILL.md`. The first invocation of `scripts/watch.py` auto-installs `ffmpeg` and `yt-dlp` via `setup.sh` (Homebrew on macOS, apt/dnf/pacman on Linux) — no further setup needed.
