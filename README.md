@@ -1,6 +1,6 @@
 # claude-watch-yt
 
-Watch and analyze videos using **only your existing AI subscription** — no Whisper API, no OpenAI, no Groq, no third-party transcription service. Works with Claude Code, Cursor, and Gemini CLI out of the box.
+Watch and analyze videos using **only your existing AI subscription**.
 
 Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video), but stripped of Whisper. Captions come straight from YouTube (or whatever yt-dlp can scrape). Videos without captions fall back to vision-only analysis.
 
@@ -33,24 +33,42 @@ Captions add a few hundred to a few thousand text tokens on top.
 
 ## Install
 
-Easiest path — just ask your AI agent to do it:
+### Claude Code (recommended)
 
-1. Clone or download this repo (or ask your agent to: *"clone https://github.com/.../claude-watch-yt"*).
-2. Open the repo folder in **Claude Code**, **Cursor**, or **Gemini CLI**.
-3. Say: *"set this up"* or *"install this skill"*.
+Two slash commands — no clone, no symlink, updates handled for you:
 
-The agent reads [AGENTS.md](AGENTS.md), creates the right symlink (`~/.claude/skills/watch`, which both Claude Code and Cursor auto-discover), and confirms when done.
+```
+/plugin marketplace add khou/watch-yt
+/plugin install claude-watch-yt@watch-yt
+```
 
-If you'd rather run the script yourself:
+### Cursor, Gemini CLI, or any other agent
+
+Just ask the agent to install it. With the repo URL, any agent can do it without you touching the shell:
+
+> *"Install the watch skill from https://github.com/khou/watch-yt"*
+
+The agent reads [AGENTS.md](AGENTS.md), downloads the repo to `~/.local/share/watch-yt`, and symlinks it into `~/.claude/skills/watch` (which both Claude Code and Cursor auto-discover).
+
+If you'd rather do it yourself, the same one-liner the agent uses:
 
 ```bash
-bash install.sh                # Claude Code + Cursor
-bash install.sh --gemini       # ...also Gemini CLI
+mkdir -p ~/.local/share && \
+  curl -fsSL https://github.com/khou/watch-yt/archive/refs/heads/main.tar.gz | \
+  tar xz -C ~/.local/share && \
+  rm -rf ~/.local/share/watch-yt && \
+  mv ~/.local/share/watch-yt-main ~/.local/share/watch-yt && \
+  bash ~/.local/share/watch-yt/install.sh
 ```
+
+Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
+
+If you've already cloned the repo, just `bash install.sh` from inside it.
 
 `ffmpeg` and `yt-dlp` install themselves the first time the script runs (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
 
 > macOS: install Homebrew first from https://brew.sh if you don't have it.
+> Claude Desktop is **not supported** — plugins/skills are a Claude Code (CLI) feature.
 
 ## Use it
 
@@ -120,18 +138,23 @@ watch.py SOURCE [--mode {fast,balanced,accurate}]
 ## Repo layout
 
 ```
-AGENTS.md                     Tells the agent how to install this skill
-SKILL.md                      Skill (loaded after install)
-.claude-plugin/plugin.json    Claude Code plugin manifest
-prompts/gemini.md             Snippet to append to your ~/.gemini/GEMINI.md
-install.sh                    Manual install (symlinks repo into skill dirs)
+AGENTS.md                          Tells the agent how to install this skill
+SKILL.md                           Skill (loaded after install)
+.claude-plugin/plugin.json         Claude Code plugin manifest
+.claude-plugin/marketplace.json    Makes the repo its own /plugin marketplace
+prompts/gemini.md                  Snippet to append to your ~/.gemini/GEMINI.md
+install.sh                         Manual install (symlinks repo into skill dirs)
 scripts/
-  watch.py                    Orchestrator (CLI entry point)
-  download.py                 yt-dlp wrapper, captions best-effort
-  frames.py                   ffmpeg frame extraction
-  captions.py                 WebVTT parser with rolling-cue dedup
-setup.sh                      Auto-installs ffmpeg + yt-dlp on first run
+  watch.py                         Orchestrator (CLI entry point)
+  download.py                      yt-dlp wrapper, captions best-effort
+  frames.py                        ffmpeg frame extraction
+  captions.py                      WebVTT parser with rolling-cue dedup
+setup.sh                           Auto-installs ffmpeg + yt-dlp on first run
 ```
+
+## License
+
+[MIT](LICENSE).
 
 ## Caveats
 
