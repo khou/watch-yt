@@ -33,22 +33,48 @@ Captions add a few hundred to a few thousand text tokens on top.
 
 ## Setup
 
+One-time install of the two CLI tools:
+
 ```bash
-git clone <this-repo> ~/.claude/plugins/claude-watch-yt
-bash ~/.claude/plugins/claude-watch-yt/setup.sh
+bash setup.sh
 ```
 
-`setup.sh` installs `ffmpeg` and `yt-dlp` via Homebrew (macOS) or apt/dnf/pacman (Linux). Both are open-source local tools — no API keys, no paid services.
+This installs `ffmpeg` and `yt-dlp` via Homebrew (macOS) or apt/dnf/pacman (Linux). Both are open-source local tools — no API keys, no paid services.
 
-### Use as a Claude Code plugin
+## Use it from Claude Code (recommended)
 
-In your Claude Code settings, register the plugin directory. The skill becomes available as `watch`:
+Install the skill so Claude Code auto-loads it. Pick one:
 
-> "Summarize https://youtu.be/dQw4w9WgXcQ"
+**Option A — symlink as a user skill (simplest):**
+```bash
+mkdir -p ~/.claude/skills
+ln -s "$(pwd)" ~/.claude/skills/watch
+```
 
-Claude will run the script, read the transcript, and answer. It picks frames selectively when needed.
+**Option B — clone into the user skills dir:**
+```bash
+git clone <this-repo> ~/.claude/skills/watch
+bash ~/.claude/skills/watch/setup.sh
+```
 
-### Use the script directly
+Then in any Claude Code session, just paste a video URL and ask:
+
+```
+Summarize https://www.youtube.com/watch?v=jNQXAC9IVRw
+
+What does the speaker mention about elephants in https://youtu.be/jNQXAC9IVRw ?
+
+What's on the slide at 4:30 in https://youtu.be/<id> ?
+```
+
+Claude will detect the URL, run the prep script, read the transcript, and load only the frames it needs. To force a specific token budget:
+
+```
+Watch this video in fast mode: https://...
+Watch this video in accurate mode: https://...
+```
+
+## Use the script directly (no Claude Code)
 
 ```bash
 python3 scripts/watch.py "https://youtu.be/jNQXAC9IVRw"
@@ -56,7 +82,26 @@ python3 scripts/watch.py /path/to/local/video.mp4 --mode accurate
 python3 scripts/watch.py "<url>" --start 5:00 --end 7:00 --resolution 768
 ```
 
-The script prints a markdown summary to stdout. The work directory contains the video, captions, frames, and `summary.json` for programmatic use.
+The script prints a markdown summary to stdout. The work directory contains the video, captions, frames, and `summary.json` for programmatic use. Pipe the output into anything that consumes markdown.
+
+## Quick examples
+
+```bash
+# Default balanced mode, full video
+python3 scripts/watch.py "https://youtu.be/jNQXAC9IVRw"
+
+# Cheap summary mode for a long talk — captions carry the content
+python3 scripts/watch.py "https://youtu.be/<long-talk>" --mode fast
+
+# Read tiny on-screen text in a slide deck
+python3 scripts/watch.py "<url>" --mode accurate --resolution 1024
+
+# Only analyze a 2-minute window
+python3 scripts/watch.py "<url>" --start 12:30 --end 14:30
+
+# Local file, keep working dir for inspection
+python3 scripts/watch.py ~/Movies/clip.mp4 --keep --out-dir /tmp/clip
+```
 
 ## CLI
 
