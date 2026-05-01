@@ -69,7 +69,7 @@ If a video is over ~15 minutes, prefer narrowing with `--start`/`--end` before r
 **User:** "Summarize https://youtu.be/abc123"
 
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/watch.py" "https://youtu.be/abc123"
+python3 <skill-dir>/scripts/watch.py "https://youtu.be/abc123"
 ```
 
 Read transcript, summarize. Don't load any frames unless the user asks about visuals.
@@ -77,7 +77,7 @@ Read transcript, summarize. Don't load any frames unless the user asks about vis
 **User:** "What's on the slide at 5:30 in this talk: <url>"
 
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/watch.py" "<url>" --start 5:00 --end 6:00 --resolution 768
+python3 <skill-dir>/scripts/watch.py "<url>" --start 5:00 --end 6:00 --resolution 768
 ```
 
 Find the frame closest to 5:30 in the output, read it, transcribe slide contents.
@@ -85,7 +85,7 @@ Find the frame closest to 5:30 in the output, read it, transcribe slide contents
 **User:** "Describe what happens in the last 30s of /Users/me/clip.mp4"
 
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/watch.py" /Users/me/clip.mp4 --start <duration-30s>
+python3 <skill-dir>/scripts/watch.py /Users/me/clip.mp4 --start <duration-30s>
 ```
 
 (First run with no `--start` to see the duration if unknown, then re-run.)
