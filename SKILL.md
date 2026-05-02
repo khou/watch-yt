@@ -1,6 +1,6 @@
 ---
 name: watch
-description: Analyze the contents of a video. Use whenever the user provides a YouTube/Vimeo/TikTok/X URL or local video file (.mp4/.mov/.mkv/.webm) and asks a question about what's in it — what was said, what was shown, who appears, when something happens, etc. Pulls the transcript from platform captions when available, otherwise transcribes locally with whisper.cpp, and extracts frames for visual context.
+description: Analyze the contents of a video. Use whenever the user provides a YouTube/Vimeo/TikTok/X/Instagram URL (including Reels) or local video file (.mp4/.mov/.mkv/.webm) and asks a question about what's in it — what was said, what was shown, who appears, when something happens, etc. Pulls the transcript from platform captions when available, otherwise transcribes locally with whisper.cpp, and extracts frames for visual context.
 ---
 
 # Watch a video
