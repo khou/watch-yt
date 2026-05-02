@@ -1,8 +1,8 @@
 # claude-watch-yt
 
-Watch and analyze videos using **only your existing AI subscription**.
+Watch and analyze videos using **only your existing AI subscription**. Works with YouTube, Vimeo, TikTok, X, Instagram (Reels), and any other site `yt-dlp` supports — plus local files.
 
-Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video). Captions come straight from YouTube (or whatever yt-dlp can scrape) when available. For videos without captions, a local `whisper.cpp` runs on your machine — no API keys, no third-party services. As a last resort, falls back to vision-only analysis.
+Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video). Captions come straight from the source platform when available. For videos without captions (most Instagram Reels, TikToks, etc.), a local `whisper.cpp` runs on your machine — no API keys, no third-party services. As a last resort, falls back to vision-only analysis.
 
 ## How it works
 
