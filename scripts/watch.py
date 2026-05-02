@@ -6,13 +6,13 @@ which frames to actually load via the Read tool.
 
 Three modes balance token cost against accuracy:
 
-  fast       — minimum viable visual coverage; captions do the work
+  fast       — minimum viable visual coverage; transcript does the work
   balanced   — sensible default; covers most questions
   accurate   — dense frames + bigger images; for precise visual questions
 
 Each mode picks defaults for max-frames and resolution that depend on
-whether captions are available. --max-frames and --resolution still
-override the mode preset.
+whether a transcript (captions or local whisper.cpp) is available.
+--max-frames and --resolution still override the mode preset.
 """
 
 from __future__ import annotations
@@ -33,36 +33,55 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from captions import load_transcript  # noqa: E402
 from download import download  # noqa: E402
 from frames import auto_fps, extract  # noqa: E402
+from transcribe import AVAILABLE_MODELS, DEFAULT_MODEL as DEFAULT_WHISPER_MODEL, transcribe  # noqa: E402
 
 
 REQUIRED_TOOLS = ("ffmpeg", "ffprobe", "yt-dlp")
 
 
 def ensure_deps(skip: bool = False) -> None:
-    """Make sure ffmpeg and yt-dlp are installed; install via setup.sh if not."""
+    """Make sure ffmpeg, yt-dlp, and (optional) whisper.cpp are installed.
+
+    Triggers setup.sh if any required tool is missing or if whisper-cli is
+    missing. whisper-cli is treated as best-effort: if setup.sh can't install
+    it (e.g., no build tools on Linux), we continue — transcription just
+    becomes unavailable and caption-less videos fall back to vision-only.
+    """
     if skip:
         return
-    missing = [t for t in REQUIRED_TOOLS if not shutil.which(t)]
-    if not missing:
+    missing_required = [t for t in REQUIRED_TOOLS if not shutil.which(t)]
+    from transcribe import find_binary as _find_whisper  # local import to avoid module-load cost
+    whisper_missing = _find_whisper() is None
+    if not missing_required and not whisper_missing:
         return
 
     setup = Path(__file__).resolve().parent.parent / "setup.sh"
     if not setup.is_file():
-        raise SystemExit(
-            f"Missing tools: {', '.join(missing)}. setup.sh not found at {setup}; "
-            "install ffmpeg and yt-dlp manually."
-        )
+        if missing_required:
+            raise SystemExit(
+                f"Missing tools: {', '.join(missing_required)}. setup.sh not found at {setup}; "
+                "install ffmpeg, yt-dlp, and (optionally) whisper.cpp manually."
+            )
+        return
 
+    needs = list(missing_required) + (["whisper.cpp"] if whisper_missing else [])
     print(
-        f"Missing {', '.join(missing)} — running {setup} (one-time setup)...",
+        f"Missing {', '.join(needs)} — running {setup} (one-time setup)...",
         file=sys.stderr,
     )
     try:
         subprocess.run(["bash", str(setup)], check=True)
     except subprocess.CalledProcessError as e:
-        raise SystemExit(
-            f"setup.sh failed (exit {e.returncode}). "
-            f"Install manually: {' '.join(missing)}"
+        if missing_required:
+            raise SystemExit(
+                f"setup.sh failed (exit {e.returncode}). "
+                f"Install manually: {' '.join(missing_required)}"
+            )
+        # Required tools were already present; only whisper failed to install — keep going.
+        print(
+            "WARNING: setup.sh did not install whisper.cpp. "
+            "Caption-less videos will fall back to vision-only.",
+            file=sys.stderr,
         )
 
     still_missing = [t for t in REQUIRED_TOOLS if not shutil.which(t)]
@@ -97,7 +116,9 @@ def _format_time(seconds: float) -> str:
     return f"{m:02d}:{s:02d}"
 
 
-# (frames_with_captions, frames_no_captions, width_with_captions, width_no_captions)
+# (frames_with_transcript, frames_no_transcript, width_with_transcript, width_no_transcript)
+# A "transcript" is either platform captions or local whisper.cpp output —
+# either way the agent doesn't need as many frames as in vision-only mode.
 MODE_PRESETS = {
     "fast":     (15, 30, 320, 480),
     "balanced": (25, 50, 384, 512),
@@ -114,7 +135,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             "  fast       15-30 frames, 320-480px wide  (~10-20k image tokens)\n"
             "  balanced   25-50 frames, 384-512px wide  (~25-60k image tokens, default)\n"
             "  accurate   60-100 frames, 512-768px wide (~80-200k image tokens)\n"
-            "The first number is for videos with captions, the second for vision-only."
+            "The first number is for videos with a transcript (captions or whisper), the second for vision-only."
         ),
     )
     parser.add_argument("source", help="Video URL or local file path")
@@ -129,7 +150,11 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--out-dir", default=None, help="Working directory (default: a temp dir).")
     parser.add_argument("--keep", action="store_true", help="Don't print the cleanup hint.")
     parser.add_argument("--no-install", action="store_true",
-                        help="Don't auto-install ffmpeg/yt-dlp if missing.")
+                        help="Don't auto-install ffmpeg/yt-dlp/whisper.cpp if missing.")
+    parser.add_argument("--no-transcribe", action="store_true",
+                        help="Skip local whisper.cpp transcription when no captions are available.")
+    parser.add_argument("--whisper-model", default=DEFAULT_WHISPER_MODEL, choices=AVAILABLE_MODELS,
+                        help=f"Whisper model to use for local transcription (default: {DEFAULT_WHISPER_MODEL}).")
     args = parser.parse_args(argv)
 
     ensure_deps(skip=args.no_install)
@@ -144,19 +169,41 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 2
 
     transcript: Optional[str] = None
+    transcript_source: Optional[str] = None  # "captions" | "whisper" | None
     if info.captions_vtt:
         try:
             transcript = load_transcript(info.captions_vtt, start=args.start, end=args.end)
-            if not transcript.strip():
+            if transcript.strip():
+                transcript_source = "captions"
+            else:
                 transcript = None
         except Exception as e:
-            print(f"WARNING: failed to parse captions ({e}); continuing in vision-only mode.", file=sys.stderr)
+            print(f"WARNING: failed to parse captions ({e}); will try local transcription.", file=sys.stderr)
             transcript = None
 
-    has_captions = transcript is not None
+    if transcript is None and not args.no_transcribe:
+        whisper_vtt = transcribe(
+            video=info.path,
+            work_dir=work_dir / "whisper",
+            model=args.whisper_model,
+            start=args.start,
+            end=args.end,
+        )
+        if whisper_vtt is not None:
+            try:
+                transcript = load_transcript(whisper_vtt, start=args.start, end=args.end)
+                if transcript.strip():
+                    transcript_source = "whisper"
+                else:
+                    transcript = None
+            except Exception as e:
+                print(f"WARNING: failed to parse whisper transcript ({e}); continuing in vision-only mode.", file=sys.stderr)
+                transcript = None
+
+    has_transcript = transcript is not None
     fc, fnc, wc, wnc = MODE_PRESETS[args.mode]
-    max_frames = args.max_frames if args.max_frames is not None else (fc if has_captions else fnc)
-    width      = args.resolution if args.resolution is not None else (wc if has_captions else wnc)
+    max_frames = args.max_frames if args.max_frames is not None else (fc if has_transcript else fnc)
+    width      = args.resolution if args.resolution is not None else (wc if has_transcript else wnc)
 
     span_start = args.start if args.start is not None else 0.0
     span_end   = args.end   if args.end   is not None else info.duration
@@ -188,12 +235,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     lines.append(f"- Duration: {_format_time(info.duration)} ({info.duration:.1f}s)")
     if args.start is not None or args.end is not None:
         lines.append(f"- Time range: {_format_time(span_start)} – {_format_time(span_end)} ({span:.1f}s)")
-    lines.append(f"- Mode: {args.mode} ({'transcript + vision' if has_captions else 'vision only — no captions'})")
+    if has_transcript:
+        source_label = {"captions": "platform captions", "whisper": f"local whisper.cpp ({args.whisper_model})"}[transcript_source]
+        lines.append(f"- Mode: {args.mode} (transcript + vision; transcript source: {source_label})")
+    else:
+        lines.append(f"- Mode: {args.mode} (vision only — no captions or transcription available)")
     lines.append(f"- Frames: {len(frames)} @ {width}px wide ({fps:.3f} fps)")
     lines.append(f"- Work dir: `{work_dir}`")
     lines.append("")
 
-    if has_captions:
+    if has_transcript:
         lines.append("## Transcript")
         lines.append("```")
         lines.append(transcript or "")
@@ -207,10 +258,14 @@ def main(argv: Optional[list[str]] = None) -> int:
         lines.append(f"- [{_format_time(f.timestamp)}] `{f.path}`")
     lines.append("")
 
-    if not has_captions:
+    if not has_transcript:
         lines.append("## Note")
-        lines.append("No captions were available, so this video has no transcript. "
-                     "All content must be inferred from frames.")
+        if args.no_transcribe:
+            lines.append("No platform captions were available and --no-transcribe was set, "
+                         "so no transcript was produced. All content must be inferred from frames.")
+        else:
+            lines.append("No platform captions were available and local whisper.cpp transcription was "
+                         "unavailable or failed. All content must be inferred from frames.")
         lines.append("")
 
     if not args.keep:
@@ -225,7 +280,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     summary = {
         "title": info.title,
         "duration": info.duration,
-        "has_captions": has_captions,
+        "has_transcript": has_transcript,
+        "transcript_source": transcript_source,
         "frame_count": len(frames),
         "frame_width": width,
         "fps": fps,

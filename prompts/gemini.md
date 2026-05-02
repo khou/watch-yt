@@ -1,6 +1,6 @@
 # Watch a video
 
-You can analyze videos using the `watch.py` script that ships with `claude-watch-yt`. It pulls captions from yt-dlp (no third-party transcription service) and extracts frames with ffmpeg.
+You can analyze videos using the `watch.py` script that ships with `claude-watch-yt`. It pulls captions from yt-dlp when available, transcribes locally with whisper.cpp when not, and extracts frames with ffmpeg. No third-party transcription service.
 
 ## When to use
 
@@ -15,16 +15,20 @@ The user shares a YouTube/Vimeo/TikTok/X URL or a local video file (`.mp4`, `.mo
 The script lives at `~/.gemini/extensions/watch/scripts/watch.py` (or wherever the user installed `claude-watch-yt`).
 
 ```bash
-python3 ~/.gemini/extensions/watch/scripts/watch.py "<source>" [--mode {fast,balanced,accurate}] [--start TIME] [--end TIME]
+python3 ~/.gemini/extensions/watch/scripts/watch.py "<source>" [--mode {fast,balanced,accurate}] [--start TIME] [--end TIME] [--no-transcribe] [--whisper-model {tiny,tiny.en,base,base.en,small,small.en}]
 ```
 
-ffmpeg and yt-dlp auto-install on first run.
+ffmpeg, yt-dlp, and whisper.cpp auto-install on first run. The first caption-less video also triggers a one-time ~140MB whisper model download to `~/.cache/watch-yt/models/`.
 
 ## Modes
 
-- `fast` — 15 frames @ 320px (~10-20k image tokens). Cheap summaries.
-- `balanced` (default) — 25 frames @ 384px (~25-60k). Most questions.
-- `accurate` — 60 frames @ 512px (~80-200k). Precise visual details.
+| Mode       | With transcript    | Vision only        | ~Image tokens |
+|------------|--------------------|--------------------|---------------|
+| `fast`     | 15 frames @ 320px  | 30 frames @ 480px  | 10-20k        |
+| `balanced` | 25 frames @ 384px  | 50 frames @ 512px  | 25-60k        |
+| `accurate` | 60 frames @ 512px  | 100 frames @ 768px | 80-200k       |
+
+"Transcript" means platform captions or local whisper.cpp output.
 
 Pick the lowest mode that can answer. Default to `balanced`.
 

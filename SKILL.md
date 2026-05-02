@@ -1,11 +1,11 @@
 ---
 name: watch
-description: Analyze the contents of a video. Use whenever the user provides a YouTube/Vimeo/TikTok/X URL or local video file (.mp4/.mov/.mkv/.webm) and asks a question about what's in it — what was said, what was shown, who appears, when something happens, etc. Pulls the transcript via auto-captions (no third-party transcription service) and extracts frames for visual context.
+description: Analyze the contents of a video. Use whenever the user provides a YouTube/Vimeo/TikTok/X URL or local video file (.mp4/.mov/.mkv/.webm) and asks a question about what's in it — what was said, what was shown, who appears, when something happens, etc. Pulls the transcript from platform captions when available, otherwise transcribes locally with whisper.cpp, and extracts frames for visual context.
 ---
 
 # Watch a video
 
-This skill prepares a video for analysis. It downloads YouTube auto-captions for the transcript and extracts a small number of frames for visual context. **No transcription API is used** — captions come straight from the platform when available, and videos without captions fall back to vision-only analysis.
+This skill prepares a video for analysis. It pulls a transcript and extracts a small number of frames for visual context. **No remote transcription API is used.** Captions come straight from the platform when available; videos without captions are transcribed locally with whisper.cpp (~140MB model, runs on CPU). If both fail, the script falls back to vision-only analysis from frames.
 
 ## When to use
 
@@ -32,15 +32,19 @@ Options (all optional):
 - `--start <time>` and `--end <time>` — trim to a range. Use when the user asks about a specific segment ("what happens in the last 2 minutes").
 - `--max-frames N` — override the mode's frame cap.
 - `--resolution N` — override the mode's frame width in pixels. Bump to 768+ ONLY when the user needs to read small on-screen text (slide content, code, UI labels).
+- `--no-transcribe` — skip the local whisper.cpp fallback and go straight to vision-only when no platform captions exist. Use when the user is in a hurry and a transcript isn't critical.
+- `--whisper-model {tiny,tiny.en,base,base.en,small,small.en}` — override the whisper model (default `base`). Bump to `small` for noisy or technical audio if `base` produces obvious errors.
 - `--keep` — don't print the cleanup hint.
 
 ### Mode selection
 
-| Mode       | With captions     | Vision only       | When to use |
-|------------|-------------------|-------------------|-------------|
-| `fast`     | 15 frames @ 320px | 30 frames @ 480px | Summaries, "what's this video about", or anything where the transcript clearly carries the answer. |
-| `balanced` | 25 frames @ 384px | 50 frames @ 512px | **Default.** Most general questions. |
-| `accurate` | 60 frames @ 512px | 100 frames @ 768px | Visual details that matter — tracking who appears when, reading dense slides, transcribing on-screen code, dense action choreography. Costs 3-4x more tokens. |
+| Mode       | With transcript    | Vision only        | When to use |
+|------------|--------------------|--------------------|-------------|
+| `fast`     | 15 frames @ 320px  | 30 frames @ 480px  | Summaries, "what's this video about", or anything where the transcript clearly carries the answer. |
+| `balanced` | 25 frames @ 384px  | 50 frames @ 512px  | **Default.** Most general questions. |
+| `accurate` | 60 frames @ 512px  | 100 frames @ 768px | Visual details that matter — tracking who appears when, reading dense slides, transcribing on-screen code, dense action choreography. Costs 3-4x more tokens. |
+
+"Transcript" means either platform captions or local whisper.cpp output. "Vision only" is when both are unavailable (or `--no-transcribe` was passed).
 
 Pick the lowest mode that can answer the user's question. If unsure, default to `balanced`. If the user explicitly asks for "thorough" / "detailed visual analysis" / "find every instance of X on screen", use `accurate`.
 
@@ -49,7 +53,7 @@ Time format: `SS`, `MM:SS`, or `HH:MM:SS`.
 ## Workflow
 
 1. **Run the script.** The output is a markdown summary with metadata, transcript (if available), and a list of frame paths with timestamps.
-2. **Read the transcript first.** It's already in your context — that alone often answers the question. For 80%+ of questions about YouTube videos, the transcript is sufficient.
+2. **Read the transcript first.** It's already in your context — that alone often answers the question. For 80%+ of questions about videos with a transcript (captions or whisper output), it's sufficient.
 3. **Read frames selectively.** The frame list is an *index*, not a directive to read them all. Use the Read tool only on the frames you actually need:
    - "What is the speaker wearing?" → read 1-2 frames near the start
    - "What does the slide at 3:42 say?" → read the single frame closest to 3:42
@@ -92,6 +96,8 @@ python3 <skill-dir>/scripts/watch.py /Users/me/clip.mp4 --start <duration-30s>
 
 ## Setup
 
-`watch.py` auto-installs `ffmpeg` and `yt-dlp` on first run via the bundled `setup.sh` (Homebrew on macOS, apt/dnf/pacman on Linux). You don't need to run anything manually.
+`watch.py` auto-installs `ffmpeg`, `yt-dlp`, and `whisper.cpp` on first run via the bundled `setup.sh` (Homebrew on macOS, apt/dnf/pacman + source build on Linux). You don't need to run anything manually.
 
-If auto-install fails (e.g., Homebrew missing on macOS), the script prints the actual error — relay it to the user and tell them to install Homebrew from https://brew.sh, then try again. Don't try to bypass with `--no-install` unless the user asks.
+The first caption-less video also triggers a one-time ~140MB model download to `~/.cache/watch-yt/models/`. Subsequent runs reuse it.
+
+If auto-install fails (e.g., Homebrew missing on macOS, no build tools on Linux), the script prints the actual error — relay it to the user and tell them how to fix it (install Homebrew from https://brew.sh, or install `git`/`cmake`/`g++` via their package manager). Don't try to bypass with `--no-install` unless the user asks. Transcription gracefully degrades: if whisper.cpp is unavailable, captioned videos still work and uncaptioned ones fall back to vision-only.

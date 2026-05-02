@@ -2,34 +2,35 @@
 
 Watch and analyze videos using **only your existing AI subscription**.
 
-Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video), but stripped of Whisper. Captions come straight from YouTube (or whatever yt-dlp can scrape). Videos without captions fall back to vision-only analysis.
+Inspired by [bradautomates/claude-video](https://github.com/bradautomates/claude-video). Captions come straight from YouTube (or whatever yt-dlp can scrape) when available. For videos without captions, a local `whisper.cpp` runs on your machine — no API keys, no third-party services. As a last resort, falls back to vision-only analysis.
 
 ## How it works
 
 ```
-URL/file → yt-dlp → video.mp4 + auto-captions.vtt → ffmpeg → frames/*.jpg
-                                                     ↓
-                                       Your agent reads selectively
+URL/file → yt-dlp → video.mp4 + (auto-captions.vtt | whisper.cpp transcript) → ffmpeg → frames/*.jpg
+                                                                                ↓
+                                                                Your agent reads selectively
 ```
 
-1. `yt-dlp` pulls the video (max 720p) and YouTube's auto-generated captions.
-2. `ffmpeg` extracts frames at an adaptive FPS, downscaled to keep image-token cost low.
-3. The orchestrator prints a markdown summary: metadata, transcript, frame index.
-4. Your agent reads the transcript and **only the frames it actually needs** to answer.
+1. `yt-dlp` pulls the video (max 720p) and the platform's auto-generated captions if any.
+2. If no captions, `whisper.cpp` (running locally on CPU) transcribes the audio. Default model is `base` (~140MB, multilingual), downloaded once to `~/.cache/watch-yt/models/`.
+3. `ffmpeg` extracts frames at an adaptive FPS, downscaled to keep image-token cost low.
+4. The orchestrator prints a markdown summary: metadata, transcript, frame index.
+5. Your agent reads the transcript and **only the frames it actually needs** to answer.
 
-When captions aren't available (TikTok, some Vimeo, some YouTube), the script switches to a denser frame sampling and Claude infers content from visuals alone.
+If both captioning paths fail (no captions, whisper.cpp not installed), the script switches to a denser frame sampling and the agent infers content from visuals alone.
 
 ## Token-cost modes
 
 Pick the trade-off you want:
 
-| Mode       | With captions     | Vision only       | ~Image tokens |
-|------------|-------------------|-------------------|---------------|
-| `fast`     | 15 frames @ 320px | 30 frames @ 480px | 10-20k        |
-| `balanced` (default) | 25 frames @ 384px | 50 frames @ 512px | 25-60k        |
-| `accurate` | 60 frames @ 512px | 100 frames @ 768px | 80-200k       |
+| Mode       | With transcript    | Vision only        | ~Image tokens |
+|------------|--------------------|--------------------|---------------|
+| `fast`     | 15 frames @ 320px  | 30 frames @ 480px  | 10-20k        |
+| `balanced` (default) | 25 frames @ 384px  | 50 frames @ 512px  | 25-60k        |
+| `accurate` | 60 frames @ 512px  | 100 frames @ 768px | 80-200k       |
 
-Captions add a few hundred to a few thousand text tokens on top.
+A transcript (captions or whisper.cpp output) adds a few hundred to a few thousand text tokens on top.
 
 ## Install
 
@@ -65,9 +66,10 @@ Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
 
 If you've already cloned the repo, just `bash install.sh` from inside it.
 
-`ffmpeg` and `yt-dlp` install themselves the first time the script runs (Homebrew on macOS, apt/dnf/pacman on Linux). No API keys. No third-party transcription service.
+`ffmpeg`, `yt-dlp`, and `whisper.cpp` install themselves the first time the script runs (Homebrew on macOS; apt/dnf/pacman + source build on Linux). No API keys. No third-party transcription service — Whisper runs locally.
 
 > macOS: install Homebrew first from https://brew.sh if you don't have it.
+> Linux: building `whisper.cpp` needs `git`, `cmake`, and `g++`. The script skips it (and falls back to vision-only) if those aren't present.
 > Claude Desktop is **not supported** — plugins/skills are a Claude Code (CLI) feature.
 
 ## Use it
@@ -87,6 +89,12 @@ To force a token budget:
 ```
 Watch this in fast mode: https://...
 Watch this in accurate mode: https://...
+```
+
+To skip the local-transcription fallback for a faster run on a caption-less video:
+
+```
+python3 scripts/watch.py <url> --no-transcribe
 ```
 
 For full CLI options, run `python3 scripts/watch.py --help`.

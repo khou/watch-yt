@@ -8,7 +8,7 @@
     {
       "name": "claude-watch-yt",
       "source": "./",
-      "description": "Watch and analyze videos using only Claude — captions via yt-dlp, frames via ffmpeg."
+      "description": "Watch and analyze videos using only Claude — captions via yt-dlp, local transcription via whisper.cpp, frames via ffmpeg."
     }
   ]
 }
