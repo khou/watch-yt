@@ -43,7 +43,18 @@ Two slash commands — no clone, no symlink, updates handled for you:
 /plugin install claude-watch-yt@watch-yt
 ```
 
-### Cursor, Gemini CLI, or any other agent
+### Homebrew (macOS / Linuxbrew)
+
+```bash
+brew install khou/watch-yt/watch-yt --HEAD
+bash "$(brew --prefix watch-yt)/libexec/install.sh"
+```
+
+The first command installs `ffmpeg`, `yt-dlp`, and `whisper-cpp` as deps and drops the repo into `$(brew --prefix)/opt/watch-yt/libexec`. The second symlinks it into `~/.claude/skills/watch` for Claude Code and Cursor. Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
+
+`brew upgrade watch-yt` updates in place; the symlink follows automatically.
+
+### Cursor, Gemini CLI, or any other agent (without brew)
 
 Just ask the agent to install it. With the repo URL, any agent can do it without you touching the shell:
 
