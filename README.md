@@ -34,9 +34,17 @@ A transcript (captions or whisper.cpp output) adds a few hundred to a few thousa
 
 ## Install
 
-### Claude Code (recommended)
+### Just ask your agent (recommended)
 
-Two slash commands — no clone, no symlink, updates handled for you:
+Works in Claude Code (CLI or desktop app), Cursor, Gemini CLI, or anything else with shell access:
+
+> *"Install the watch skill from https://github.com/khou/watch-yt"*
+
+The agent reads [AGENTS.md](AGENTS.md), downloads the repo to `~/.local/share/watch-yt`, and symlinks it into `~/.claude/skills/watch` (which Claude Code and Cursor auto-discover).
+
+### Claude Code: `/plugin marketplace`
+
+If you'd rather have Claude Code track updates for you, use the plugin marketplace instead:
 
 ```
 /plugin marketplace add khou/watch-yt
@@ -54,15 +62,9 @@ The first command installs `ffmpeg`, `yt-dlp`, and `whisper-cpp` as deps and dro
 
 `brew upgrade watch-yt` updates in place; the symlink follows automatically.
 
-### Cursor, Gemini CLI, or any other agent (without brew)
+### Manual
 
-Just ask the agent to install it. With the repo URL, any agent can do it without you touching the shell:
-
-> *"Install the watch skill from https://github.com/khou/watch-yt"*
-
-The agent reads [AGENTS.md](AGENTS.md), downloads the repo to `~/.local/share/watch-yt`, and symlinks it into `~/.claude/skills/watch` (which both Claude Code and Cursor auto-discover).
-
-If you'd rather do it yourself, the same one-liner the agent uses:
+The same one-liner the agent runs, if you'd rather do it yourself:
 
 ```bash
 mkdir -p ~/.local/share && \
@@ -73,15 +75,15 @@ mkdir -p ~/.local/share && \
   bash ~/.local/share/watch-yt/install.sh
 ```
 
-Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
+Add `--gemini` to the final `install.sh` to also wire up Gemini CLI. If you've already cloned the repo, just `bash install.sh` from inside it.
 
-If you've already cloned the repo, just `bash install.sh` from inside it.
+---
 
 `ffmpeg`, `yt-dlp`, and `whisper.cpp` install themselves the first time the script runs (Homebrew on macOS; apt/dnf/pacman + source build on Linux). No API keys. No third-party transcription service — Whisper runs locally.
 
 > macOS: install Homebrew first from https://brew.sh if you don't have it.
 > Linux: building `whisper.cpp` needs `git`, `cmake`, and `g++`. The script skips it (and falls back to vision-only) if those aren't present.
-> Claude Desktop is **not supported** — plugins/skills are a Claude Code (CLI) feature.
+> The consumer **Claude Desktop** app (claude.ai wrapper) is a separate product and isn't supported — its skills system is unrelated to Claude Code's.
 
 ## Use it
 
