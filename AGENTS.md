@@ -15,9 +15,29 @@ If the user has just opened this repo and says anything like "set this up", "ins
 
 There's a `bash install.sh` that does the same thing — feel free to run it instead of doing the steps manually.
 
-## Installing without an existing clone (Cursor, Gemini CLI, others)
+## Installing without an existing clone
 
-If the user is talking to you in **Cursor**, **Gemini CLI**, or any agent that isn't Claude Code, and they don't already have the repo on disk, run this one-liner — it works from any cwd, no `git` required:
+Try these in order — stop at the first one that works:
+
+**1. Claude Code (preferred):**
+
+```
+/plugin marketplace add khou/watch-yt
+/plugin install claude-watch-yt@watch-yt
+```
+
+This is the native path and updates handle themselves. Tell the user to run the two slash commands; you can't invoke them yourself.
+
+**2. Homebrew (macOS / Linuxbrew):**
+
+```bash
+brew install khou/watch-yt/watch-yt --HEAD && \
+  bash "$(brew --prefix watch-yt)/libexec/install.sh"
+```
+
+`brew` is on most users' allowlists; this avoids the raw `curl`/`git clone` paths that the harness sandbox typically denies. Append `--gemini` to the final `install.sh` for Gemini CLI.
+
+**3. Curl one-liner (last resort):**
 
 ```bash
 mkdir -p ~/.local/share && \
@@ -28,11 +48,9 @@ mkdir -p ~/.local/share && \
   bash ~/.local/share/watch-yt/install.sh
 ```
 
-For Gemini CLI, append `--gemini` to the final `install.sh` call and tell the user to add the contents of `~/.local/share/watch-yt/prompts/gemini.md` to their `~/.gemini/GEMINI.md`.
+If both `curl` and `git clone` are denied by the harness, **stop retrying.** Tell the user the network paths are blocked and ask them to run `bash install.sh` from a local clone themselves. Don't paper over a sandbox denial with workarounds.
 
-To update later, re-run the same one-liner — it overwrites `~/.local/share/watch-yt` in place; the symlinks keep pointing at it.
-
-> **Claude Code:** the symlink-based install above works fine here too. If the user specifically asks for auto-updates or mentions plugins, suggest `/plugin marketplace add khou/watch-yt` then `/plugin install claude-watch-yt@watch-yt` instead — but don't switch to it unprompted.
+To update later, re-run whichever path you used; symlinks keep pointing at the install location.
 
 ## After install
 
