@@ -32,7 +32,7 @@ For Gemini CLI, append `--gemini` to the final `install.sh` call and tell the us
 
 To update later, re-run the same one-liner — it overwrites `~/.local/share/watch-yt` in place; the symlinks keep pointing at it.
 
-> **Claude Code users:** prefer `/plugin marketplace add khou/watch-yt` then `/plugin install claude-watch-yt@watch-yt`. That's the native path and handles updates automatically. Only fall back to the one-liner above if the user explicitly doesn't want to use the plugin marketplace.
+> **Claude Code:** the symlink-based install above works fine here too. If the user specifically asks for auto-updates or mentions plugins, suggest `/plugin marketplace add khou/watch-yt` then `/plugin install claude-watch-yt@watch-yt` instead — but don't switch to it unprompted.
 
 ## After install
 
