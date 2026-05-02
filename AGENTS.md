@@ -36,8 +36,8 @@ To update later, re-run the same one-liner — it overwrites `~/.local/share/wat
 
 ## After install
 
-Once installed, when the user shares a video URL or local file and asks a question, follow the instructions in `SKILL.md`. The first invocation of `scripts/watch.py` auto-installs `ffmpeg` and `yt-dlp` via `setup.sh` (Homebrew on macOS, apt/dnf/pacman on Linux) — no further setup needed.
+Once installed, when the user shares a video URL or local file and asks a question, follow the instructions in `SKILL.md`. The first invocation of `scripts/watch.py` auto-installs `ffmpeg`, `yt-dlp`, and `whisper.cpp` via `setup.sh` (Homebrew on macOS, apt/dnf/pacman + source build on Linux) — no further setup needed.
 
 ## What this skill does
 
-`watch` analyzes videos using only the user's existing Claude/Cursor/Gemini subscription. It pulls captions from `yt-dlp` (no third-party transcription service) and extracts frames with `ffmpeg`. See `README.md` for details.
+`watch` analyzes videos using only the user's existing Claude/Cursor/Gemini subscription. It pulls captions from `yt-dlp` when available, transcribes locally with `whisper.cpp` when not, and extracts frames with `ffmpeg`. No third-party transcription service. See `README.md` for details.

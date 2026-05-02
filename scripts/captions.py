@@ -1,7 +1,10 @@
 """Parse a WebVTT file into compact `[MM:SS] text` lines.
 
-YouTube auto-captions use rolling cues — each phrase appears 2-3 times as
-it scrolls onto the screen. We dedup aggressively to save tokens.
+Used for both platform-provided captions (e.g. YouTube auto-captions) and
+locally-generated whisper.cpp output. YouTube auto-captions use rolling
+cues — each phrase appears 2-3 times as it scrolls onto the screen — so
+we dedup aggressively to save tokens. Whisper output doesn't have rolling
+overlap, so the dedupe pass is effectively a no-op for it.
 """
 
 from __future__ import annotations
