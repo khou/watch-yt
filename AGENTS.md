@@ -22,8 +22,8 @@ Try these in order — stop at the first one that works:
 **1. Claude Code (preferred):**
 
 ```
-/plugin marketplace add khou/watch-yt
-/plugin install claude-watch-yt@watch-yt
+/plugin marketplace add khou/watch-video
+/plugin install watch-video@watch-video
 ```
 
 This is the native path and updates handle themselves. Tell the user to run the two slash commands; you can't invoke them yourself.
@@ -31,8 +31,8 @@ This is the native path and updates handle themselves. Tell the user to run the 
 **2. Homebrew (macOS / Linuxbrew):**
 
 ```bash
-brew install khou/watch-yt/watch-yt --HEAD && \
-  bash "$(brew --prefix watch-yt)/libexec/install.sh"
+brew install khou/watch-video/watch-video --HEAD && \
+  bash "$(brew --prefix watch-video)/libexec/install.sh"
 ```
 
 `brew` is on most users' allowlists; this avoids the raw `curl`/`git clone` paths that the harness sandbox typically denies. Append `--gemini` to the final `install.sh` for Gemini CLI.
@@ -41,11 +41,11 @@ brew install khou/watch-yt/watch-yt --HEAD && \
 
 ```bash
 mkdir -p ~/.local/share && \
-  curl -fsSL https://github.com/khou/watch-yt/archive/refs/heads/main.tar.gz | \
+  curl -fsSL https://github.com/khou/watch-video/archive/refs/heads/main.tar.gz | \
   tar xz -C ~/.local/share && \
-  rm -rf ~/.local/share/watch-yt && \
-  mv ~/.local/share/watch-yt-main ~/.local/share/watch-yt && \
-  bash ~/.local/share/watch-yt/install.sh
+  rm -rf ~/.local/share/watch-video && \
+  mv ~/.local/share/watch-video-main ~/.local/share/watch-video && \
+  bash ~/.local/share/watch-video/install.sh
 ```
 
 If both `curl` and `git clone` are denied by the harness, **stop retrying.** Tell the user the network paths are blocked and ask them to run `bash install.sh` from a local clone themselves. Don't paper over a sandbox denial with workarounds.

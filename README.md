@@ -1,4 +1,4 @@
-# claude-watch-yt
+# watch-video
 
 Watch and analyze videos using **only your existing AI subscription**. Works with YouTube, Vimeo, TikTok, X, Instagram (Reels), and any other site `yt-dlp` supports — plus local files.
 
@@ -38,29 +38,29 @@ A transcript (captions or whisper.cpp output) adds a few hundred to a few thousa
 
 Works in Claude Code (CLI or desktop app), Cursor, Gemini CLI, or anything else with shell access:
 
-> *"Install the watch skill from https://github.com/khou/watch-yt"*
+> *"Install the watch skill from https://github.com/khou/watch-video"*
 
-The agent reads [AGENTS.md](AGENTS.md), downloads the repo to `~/.local/share/watch-yt`, and symlinks it into `~/.claude/skills/watch` (which Claude Code and Cursor auto-discover).
+The agent reads [AGENTS.md](AGENTS.md), downloads the repo to `~/.local/share/watch-video`, and symlinks it into `~/.claude/skills/watch` (which Claude Code and Cursor auto-discover).
 
 ### Claude Code: `/plugin marketplace`
 
 If you'd rather have Claude Code track updates for you, use the plugin marketplace instead:
 
 ```
-/plugin marketplace add khou/watch-yt
-/plugin install claude-watch-yt@watch-yt
+/plugin marketplace add khou/watch-video
+/plugin install watch-video@watch-video
 ```
 
 ### Homebrew (macOS / Linuxbrew)
 
 ```bash
-brew install khou/watch-yt/watch-yt --HEAD
-bash "$(brew --prefix watch-yt)/libexec/install.sh"
+brew install khou/watch-video/watch-video --HEAD
+bash "$(brew --prefix watch-video)/libexec/install.sh"
 ```
 
-The first command installs `ffmpeg`, `yt-dlp`, and `whisper-cpp` as deps and drops the repo into `$(brew --prefix)/opt/watch-yt/libexec`. The second symlinks it into `~/.claude/skills/watch` for Claude Code and Cursor. Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
+The first command installs `ffmpeg`, `yt-dlp`, and `whisper-cpp` as deps and drops the repo into `$(brew --prefix)/opt/watch-video/libexec`. The second symlinks it into `~/.claude/skills/watch` for Claude Code and Cursor. Add `--gemini` to the final `install.sh` to also wire up Gemini CLI.
 
-`brew upgrade watch-yt` updates in place; the symlink follows automatically.
+`brew upgrade watch-video` updates in place; the symlink follows automatically.
 
 ### Manual
 
@@ -68,11 +68,11 @@ The same one-liner the agent runs, if you'd rather do it yourself:
 
 ```bash
 mkdir -p ~/.local/share && \
-  curl -fsSL https://github.com/khou/watch-yt/archive/refs/heads/main.tar.gz | \
+  curl -fsSL https://github.com/khou/watch-video/archive/refs/heads/main.tar.gz | \
   tar xz -C ~/.local/share && \
-  rm -rf ~/.local/share/watch-yt && \
-  mv ~/.local/share/watch-yt-main ~/.local/share/watch-yt && \
-  bash ~/.local/share/watch-yt/install.sh
+  rm -rf ~/.local/share/watch-video && \
+  mv ~/.local/share/watch-video-main ~/.local/share/watch-video && \
+  bash ~/.local/share/watch-video/install.sh
 ```
 
 Add `--gemini` to the final `install.sh` to also wire up Gemini CLI. If you've already cloned the repo, just `bash install.sh` from inside it.

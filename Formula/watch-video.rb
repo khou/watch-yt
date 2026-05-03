@@ -1,8 +1,8 @@
-class WatchYt < Formula
+class WatchVideo < Formula
   desc "Analyze videos with Claude — captions via yt-dlp, transcription via whisper.cpp"
-  homepage "https://github.com/khou/watch-yt"
+  homepage "https://github.com/khou/watch-video"
   license "MIT"
-  head "https://github.com/khou/watch-yt.git", branch: "main"
+  head "https://github.com/khou/watch-video.git", branch: "main"
 
   depends_on "ffmpeg"
   depends_on "whisper-cpp"

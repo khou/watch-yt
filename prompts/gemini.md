@@ -1,6 +1,6 @@
 # Watch a video
 
-You can analyze videos using the `watch.py` script that ships with `claude-watch-yt`. It pulls captions from yt-dlp when available, transcribes locally with whisper.cpp when not, and extracts frames with ffmpeg. No third-party transcription service.
+You can analyze videos using the `watch.py` script that ships with `watch-video`. It pulls captions from yt-dlp when available, transcribes locally with whisper.cpp when not, and extracts frames with ffmpeg. No third-party transcription service.
 
 ## When to use
 
@@ -12,7 +12,7 @@ The user shares a YouTube/Vimeo/TikTok/X URL or a local video file (`.mp4`, `.mo
 
 ## How to run
 
-The script lives at `~/.gemini/extensions/watch/scripts/watch.py` (or wherever the user installed `claude-watch-yt`).
+The script lives at `~/.gemini/extensions/watch/scripts/watch.py` (or wherever the user installed `watch-video`).
 
 ```bash
 python3 ~/.gemini/extensions/watch/scripts/watch.py "<source>" [--mode {fast,balanced,accurate}] [--start TIME] [--end TIME] [--no-transcribe] [--whisper-model {tiny,tiny.en,base,base.en,small,small.en}]
